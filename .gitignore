@@ -230,3 +230,6 @@ fabric.properties
 
 # ignore file
 *.csv
+
+# executable files
+*.exe
