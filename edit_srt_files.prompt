@@ -1,0 +1,14 @@
+Create a function that goes into folder movies and into any other sub folders, especially if they contain a sub folder called `Subs` and search for the srt files. If it finds any, it will open them and edit them. Edit the srt files with the following rules:
+- For every srt or idx file rename it to the name of the movie folder it contains.
+    - Example: If the srt file is in a folder called `The Godfather (1972) 1080p` then rename the srt file to `The Godfather (1972) 1080p.{langauge}.srt`
+        - The .srt file with `{language}`. Example: `The Godfather (1972) 1080p.eng.srt`, where `eng` is the language of the srt file using the ISO-639-2/B language codes. Usually srt files contain the language in their name such as 1_English.srt, 2_Engllish.srt, 3_Spanish.srt, 4_Spanish.srt, etc. You can use this to extract the language from the file name.
+        - If the srt file does not contain the language in the file name, then you can use the `langdetect` library to detect the language of the srt file. You can use the following code to detect the language of the srt file:
+            ```python
+            from langdetect import detect
+            lang = detect(srt_file_content)
+            ```
+        - If there is more than one English srt file, then rename the second one to `The Godfather (1972) 1080p.en.srt` using the ISO-639-1 language code. If there is another English srt file, then rename it to `The Godfather (1972) 1080p.en2.srt` and so on.
+        - Do the same for other languages. If there is more than one Spanish srt file, then rename the second one to `The Godfather (1972) 1080p.es.srt` using the ISO-639-1 language code. If there is another Spanish srt file, then rename it to `The Godfather (1972) 1080p.es2.srt` and so on.
+- Once renaming is complete, if the srt files are in a folder called `Subs` or a sub folder, then move the srt files to the parent folder where the movie is located. Remove any sub folder called `Subs` or any other sub folder once the srt files are moved to the parent folder.
+If a movie folder does not contain .srt files of sub folder of .srt files, then take note of the movie folder and append it to a list called `edit_srt_files_movies_without_srt_files`. Once the function is done, return the list of movies and store into a dataframe to save it as a csv file.
+If a movie file is not within a folder, continue to the next movie file.

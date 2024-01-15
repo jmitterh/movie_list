@@ -119,7 +119,7 @@ def update_metadata(file_path):
 if __name__ == "__main__":
     
     ignore_file_ext = ['.ini', '.sub', '.exe', '.parts', '.idx', '.srt', '.xml', '.sqlite', '.xlsx', '.txt', '.jpg']
-    nas_path = '//10.0.0.148/Movies'  
+    nas_path = '//10.0.0.148/Media/Movies'  
     local_path = 'E:\Videos'  
     for file in iterate_files(local_path, ignore_file_ext):
         update_metadata(file)
