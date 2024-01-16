@@ -25,7 +25,7 @@ def iterate_files(path, ignore_file_ext):
             if not any(file.lower().endswith('.' + ext) for ext in ignore_file_ext):
                 yield os.path.join(root, file)
                 
-
+# currently not used
 def get_current_metadata_title(file_path):
     # This function uses FFprobe to get the current title metadata from the file
     try:
@@ -41,14 +41,37 @@ def get_current_metadata_title(file_path):
         return None
 
 
+def get_metadata_title_and_comments(file_path):
+    # This function uses FFprobe to get the current metadata from the file
+    try:
+        ffprobe_path = 'D:/PyScripts/movie_list/ffprobe.exe'  # Adjust to your actual ffprobe path
+        # Command to get title and comments
+        command = [
+            ffprobe_path, "-loglevel", "error", "-select_streams", "v:0",
+            "-show_entries", "format_tags=title:format_tags=comment", "-of", "default=noprint_wrappers=1:nokey=1",
+            file_path
+        ]
+        result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output = result.stdout.decode('utf-8').strip()
+        # Split the output by newline to get separate metadata entries
+        metadata = output.split('\n')
+        title = metadata[0] if len(metadata) > 0 else None
+        comments = metadata[1] if len(metadata) > 1 else None
+        return title, comments
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error getting metadata from file {file_path}: {e}")
+        return None, None
+
+
 def edit_video_metadata(file_path, new_title):
     try:
         logging.info(f"Checking metadata for video file: {file_path}")
-        current_title = get_current_metadata_title(file_path)
-        if current_title == new_title:
-            logging.info(f"Title already matches for {file_path}, skipping metadata update.")
+        current_title, current_comments = get_metadata_title_and_comments(file_path)
+        if current_title == new_title and (current_comments is None or current_comments == ''):
+            logging.info(f"Title already matches for {file_path}, and no comments in the comments section. Skipping metadata update.")
             return
-
+        
+        logging.info(f"Current title: {current_title}, new title: {new_title}, current comments: {current_comments}")
         file_extension = os.path.splitext(file_path)[1]
         temp_file = f"{file_path}.temp{file_extension}"
         ffmpeg_path = 'D:/PyScripts/movie_list/ffmpeg.exe'  # Update this path
@@ -57,7 +80,9 @@ def edit_video_metadata(file_path, new_title):
             '-fflags', '+genpts',
             '-i', file_path,
             '-metadata', f'title={new_title}',
+            '-metadata', 'comment=',  # This line will clear the comment tag
             '-codec', 'copy',
+            '-y',  # Overwrite without asking
             temp_file
         ]
 
@@ -119,11 +144,14 @@ def update_metadata(file_path):
 if __name__ == "__main__":
     
     ignore_file_ext = ['.ini', '.sub', '.exe', '.parts', '.idx', '.srt', '.xml', '.sqlite', '.xlsx', '.txt', '.jpg']
+    
     nas_path = '//10.0.0.148/Media/Movies'  
-    local_path = 'E:\Videos'  
-    for file in iterate_files(local_path, ignore_file_ext):
+    local_path = 'E:\Videos'
+    single_path = 'E:\Videos\Smile.2022.1080p'
+    
+    for file in iterate_files(single_path, ignore_file_ext):
         update_metadata(file)
-    msg = f"Finished updating metadata for files in {local_path}"
+    msg = f"Finished updating metadata for files in {single_path}"
     logging.info(msg)
 
     # edit_avi_metadata('E:\Videos\Drugs Inc - Hallucinogens (2012).avi','Hallucinogens (2012)')
