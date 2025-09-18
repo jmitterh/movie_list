@@ -19,15 +19,27 @@ stream_format = logging.Formatter('%(levelname)s: %(message)s')
 stream_handler.setFormatter(stream_format)
 logger.addHandler(stream_handler)
 
-def iterate_files(path, ignore_file_ext):
+def iterate_files(path: str, ignore_file_ext: list)-> str:
+    '''
+    Iterate through all files in the given path and ignore files with the given extensions
+    variables:
+        path: path to iterate through
+        ignore_file_ext: list of file extensions to ignore
+    returns: file_path
+    '''
     for root, dirs, files in os.walk(path):
         for file in files:
             if not any(file.lower().endswith('.' + ext) for ext in ignore_file_ext):
                 yield os.path.join(root, file)
                 
 # currently not used
-def get_current_metadata_title(file_path):
-    # This function uses FFprobe to get the current title metadata from the file
+def get_current_metadata_title(file_path:str)-> str:
+    '''
+    Get the current title from the file
+    variables:
+        file_path: path to the file
+    returns: title
+    '''
     try:
         ffprobe_path = 'D:/PyScripts/movie_list/ffprobe.exe'  # Adjust to your actual ffprobe path
         result = subprocess.run(
@@ -41,8 +53,13 @@ def get_current_metadata_title(file_path):
         return None
 
 
-def get_metadata_title_and_comments(file_path):
-    # This function uses FFprobe to get the current metadata from the file
+def get_metadata_title_and_comments(file_path:str)-> str:
+    '''
+    Get the current title and comments from the file
+    variables:
+        file_path: path to the movie file
+    returns: title, comments
+    '''
     try:
         ffprobe_path = 'D:/PyScripts/movie_list/ffprobe.exe'  # Adjust to your actual ffprobe path
         # Command to get title and comments
@@ -63,9 +80,17 @@ def get_metadata_title_and_comments(file_path):
         return None, None
 
 
-def edit_video_metadata(file_path, new_title):
+def edit_video_metadata(file_path: str, new_title: str)-> None:
+    '''
+    Edit the video metadata using FFmpeg
+    variables:
+        file_path: path to the video file
+        new_title: new title for the video file
+    returns: None
+    '''
     try:
         logging.info(f"Checking metadata for video file: {file_path}")
+        # get the current title and comments
         current_title, current_comments = get_metadata_title_and_comments(file_path)
         if current_title == new_title and (current_comments is None or current_comments == ''):
             logging.info(f"Title already matches for {file_path}, and no comments in the comments section. Skipping metadata update.")
@@ -90,25 +115,33 @@ def edit_video_metadata(file_path, new_title):
         subprocess.run(cmd, shell=True, check=True, cwd=os.path.dirname(file_path))
         os.replace(temp_file, file_path)
         logging.info(f"Metadata updated for video file: {file_path}")
-
+        return
     except subprocess.CalledProcessError as e:
         logging.error(f"FFmpeg error for file {file_path}: {e}")
     except Exception as e:
         logging.error(f"General error updating file {file_path}: {e}")
 
 
-def update_metadata(file_path):
-    video_file_extensions = ['.avi', '.mkv', '.mp4', '.mov', '.mpeg', '.xvid', '.webm', '.flv', '.wmv'] # Add other extensions if needed
+def update_metadata(file_path: str)-> None:
+    '''
+    This function will update the metadata for the given file
+    '''
+    video_file_extensions = ['.avi', '.mkv', '.mp4', '.mov', '.mpeg', '.xvid', '.webm', '.flv', '.wmv','.ass'] # Add other extensions if needed
     try:
         # Check file extension, use FFmpeg for AVI, MKV, and other video formats
         file_extension = os.path.splitext(file_path)[1]
         if file_extension.lower() in video_file_extensions:  
             logging.info(f"Checking metadata for {file_extension} file: {file_path}")
             file_name = os.path.basename(file_path)
+            # title of the file without extension
             title_without_extension, _ = os.path.splitext(file_name)
+            # Check if title already matches the file name without extension
             edit_video_metadata(file_path, title_without_extension)
             return
+    except Exception as e:
+        logging.error(f"Error updating file via update metadata function, first if block: {file_path}: {e}\n")
 
+    try:
         # For formats handled by Mutagen
         media_file = File(file_path, easy=True)
         if media_file is None:
@@ -136,9 +169,9 @@ def update_metadata(file_path):
             logging.info(f"Removed comment from file {file_path}\n")
 
         media_file.save()
-
+        return
     except Exception as e:
-        logging.error(f"Error updating file {file_path}: {e}\n")
+        logging.error(f"Error updating file via formats handled by Mutagen, second if block: {file_path}: {e}\n")
 
 
 if __name__ == "__main__":
@@ -147,11 +180,11 @@ if __name__ == "__main__":
     
     nas_path = '//10.0.0.148/Media/Movies'  
     local_path = 'E:\Videos'
-    single_path = 'E:\Videos\Smile.2022.1080p'
+    single_path = "E:/Videos/Ninja Scroll (1993) 1080p"
+    list_path = ['E:\Videos\Godzilla Minus One (2023) 1080p']
     
-    for file in iterate_files(single_path, ignore_file_ext):
-        update_metadata(file)
-    msg = f"Finished updating metadata for files in {single_path}"
+    for path in list_path:
+        for file in iterate_files(path, ignore_file_ext):
+            update_metadata(file)
+    msg = f"Finished updating metadata for files in {list_path}"
     logging.info(msg)
-
-    # edit_avi_metadata('E:\Videos\Drugs Inc - Hallucinogens (2012).avi','Hallucinogens (2012)')

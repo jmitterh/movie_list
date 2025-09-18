@@ -6,6 +6,8 @@ import pandas as pd
 import re
 import logging
 
+from datetime import datetime as dt
+
 
 # Configure logging
 logger = logging.getLogger()  # Get the root logger
@@ -216,6 +218,9 @@ def edit_srt_files(root_folder):
     return movies_without_srt_files
 
 if __name__ == "__main__":
+
+    datetime_now = dt.now().strftime("%Y-%m-%d_%H%M%S")
+    logging.basicConfig(filename=f'edit_srt_files_{datetime_now}.log', level=logging.INFO)
     
     test_path = "E:\Movie_edit_testing\Movies"
     nas_path = '//10.0.0.148/Media/Movies'  
@@ -228,6 +233,6 @@ if __name__ == "__main__":
         if movie_w_no_srt is not None:
             df = df.append({'movies_with_no_srt_file': movie_w_no_srt}, ignore_index=True)
             
-    df.to_csv('movies_without_srt_files.csv', index=False)
+    df.to_csv(f'./output/movies_without_srt_files_{datetime_now}.csv', index=False)
     logger.info("Finished editing SRT files.")
     

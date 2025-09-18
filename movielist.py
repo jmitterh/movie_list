@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import datetime as dt
 
 
 # files within directory
@@ -19,7 +20,7 @@ def iterate_folders(path):
 if __name__ == "__main__":
     filepath = 'E:\Videos'
     dict = {}
-    ignore_file_exe = ['ini','sub','exe','parts','idx','srt','xml','sqlite','xlsx','txt','jpg']
+    ignore_file_exe = ['ini','sub','exe','parts','idx','srt','xml','sqlite','xlsx','txt','jpg','sfv','sub']
     # different file extensions
     file_extension_list = set()
     for (path, dirs, files) in os.walk(filepath):
@@ -141,6 +142,7 @@ if __name__ == "__main__":
     # df = df.transpose()
     df = pd.DataFrame({key: pd.Series(value, dtype='object') for key, value in dict.items()})
     # print(df)
-    df.to_csv('movie_list.csv', index=False)
+    datetime = dt.datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    df.to_csv(f'./output/movie_list_{datetime}.csv', index=False)
 
 print('finished')
